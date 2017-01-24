@@ -11,16 +11,46 @@ from .exc import InvalidPathError
 
 
 class DataReader(object):
+    """Base class for EEG data readers. Deriving classes should not override
+    this method but instead implement the :meth:`initialize` method to finalize
+    any initialization.
+
+    :param str path: Path to the directory containing EEG data or an EEG data
+        file (reader-specific).
+    :param list channels: When not None, limit number of channels to read.
+    :param bool noread: When True, don't automatically try to read data on
+        object initialization.
+    :param dict kwargs: Keyword arguments to pass along to :meth:`initialize`.
+
+    """
     timeseries = pd.DataFrame()
     _time_column = "time"
 
-    def read_timeseries(self, channels, **kwargs):
+    def __init__(self, path, channels=None, noread=False, **kwargs):
+        self.path = osp.expanduser(path)
+
+        if not osp.isdir(self.path):
+            raise InvalidPathError("path must be a directory")
+
+        if not noread:
+            self.read_timeseries(channels=channels)
+
+        self.initialize(**kwargs)
+
+    def initialize(self, **kwargs):
+        """Override this method for custom initialization to be performed after
+        generic initialization.
+
+        """
+        pass
+
+    def read_timeseries(self, channels=None):
         """Override to read timeseries EEG data. In addition to returning the
         data as a pandas data frame, this should also set the :attr:`timeseries`
         attribute to the same data frame so that plotting and other
         data-dependent functions will work.
 
-        :param list channels: EEG channels to return.
+        :param list channels: EEG channels to return or None to return all.
         :returns: EEG timeseries
         :rtype: pd.DataFrame
 
@@ -84,40 +114,22 @@ class RamulatorReader(DataReader):
     _event_log_file = "event_log.json"
     _log_file = "output.log"
 
-    def __init__(self, path):
-        self.path = os.expanduser(path)
-
-        if not osp.isdir(self.path):
-            raise InvalidPathError("path must be a directory")
-
-        # Check for required files
-        contents = os.listdir(self.path)
-        for fname in [self._timeseries_file, self._event_log_file, self._log_file]:
-            if fname not in contents:
-                raise InvalidPathError("{:s} not found in path {:s}".format(
-                                       fname, self.path))
-
-    def read_timeseries(self, channels, **kwargs):
+    def read_timeseries(self, channels=None):
         """Read Ramulator timeseries data files (stored in HDF5 format).
 
-        :param list channels:
-        :param str channel_type: "zero", "one", or "names" for using
-            zero-based indexing, one-based indexing, or contact names (default:
-            "zero").
+        :param list channels: List of channels to read or None to read all.
 
         """
-        channel_type = kwargs.get("channel_type", "zero")
-
-        if channel_type is not "zero":
-            # FIXME
-            raise NotImplementedError("Only zero-indexing is allowed right now")
-
         filename = osp.join(self.path, self._timeseries_file)
 
         # TODO: use pytables instead so that only it is required
         with h5py.File(filename, "r") as hfile:
-            ports = hfile["ports"].value[channels]
-            ts = hfile["timeseries"].value[channels]
+            if channels is not None:
+                ports = hfile["ports"].value[channels]
+                ts = hfile["timeseries"].value[channels]
+            else:
+                ports = hfile["ports"].value
+                ts = hfile["timeseries"].value
 
         dt = 1 / 1000.  # 1000 Hz sampling rate
         times = np.linspace(0, dt * ts.shape[1], ts.shape[1])
