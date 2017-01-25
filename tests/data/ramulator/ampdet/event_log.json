@@ -1,0 +1,58 @@
+{
+  "events": [
+    {
+      "event_label": "STIM", 
+      "event_value": "ON", 
+      "event_id": 0, 
+      "t0": 1485353973.27, 
+      "to_id": -1, 
+      "orig_timestamp": 1485353973.27, 
+      "msg_stub": {
+        "amplitude": 250, 
+        "pulse_freq": 10000, 
+        "duration": 500, 
+        "stim_pair": "DEFAULT_STIM_PAIR"
+      }, 
+      "t_event": 1485353973.27, 
+      "offset": 3232, 
+      "from_id": -1, 
+      "command_id": 16
+    }, 
+    {
+      "event_label": "STIM", 
+      "event_value": "ON", 
+      "event_id": 0, 
+      "t0": 1485353977.895, 
+      "to_id": -1, 
+      "orig_timestamp": 1485353977.895, 
+      "msg_stub": {
+        "amplitude": 1000, 
+        "pulse_freq": 10000, 
+        "duration": 500, 
+        "stim_pair": "DEFAULT_STIM_PAIR"
+      }, 
+      "t_event": 1485353977.895, 
+      "offset": 7855, 
+      "from_id": -1, 
+      "command_id": 16
+    }, 
+    {
+      "event_label": "STIM", 
+      "event_value": "ON", 
+      "event_id": 0, 
+      "t0": 1485353981.515, 
+      "to_id": -1, 
+      "orig_timestamp": 1485353981.515, 
+      "msg_stub": {
+        "amplitude": 1000, 
+        "pulse_freq": 100000, 
+        "duration": 500, 
+        "stim_pair": "DEFAULT_STIM_PAIR"
+      }, 
+      "t_event": 1485353981.515, 
+      "offset": 11487, 
+      "from_id": -1, 
+      "command_id": 16
+    }
+  ]
+}

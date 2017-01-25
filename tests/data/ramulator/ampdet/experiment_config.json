@@ -1,0 +1,26 @@
+{
+    "subject": "test",
+    "experiment": {
+        "type": "AmplitudeDetermination",
+        "experiment_specific_data": {
+            "stim_electrode_pairs": [
+            "L7ST2_L7ST3","L3AG7_L3AG8"
+            ]
+        },
+        "experiment_specs": {
+        }
+    },
+    "electrode_config_file": "config_files/R1170J_StimArtifactTestA10A11Stim.bin",
+    "montage_file": "",
+    "global_settings": {
+        "data_dir": "SET_AUTOMATICALLY_AT_A_RUNTIME",
+        "experiment_config_filename": "SET_AUTOMATICALLY_AT_A_RUNTIME",
+        "plot_fps": 5,
+        "plot_window_length": 20000,
+        "plot_update_style": "Sweeping",
+        "max_session_length": 120,
+        "sampling_rate": 1000,
+        "odin_lib_debug_level": 0,
+        "connect_to_task_laptop": false
+    }
+}
