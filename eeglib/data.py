@@ -12,8 +12,9 @@ from .exc import InvalidPathError
 
 class DataReader(object):
     """Base class for EEG data readers. Deriving classes should not override
-    this method but instead implement the :meth:`initialize` method to finalize
-    any initialization.
+    this method but instead implement the :meth:`initialize` method to do
+    anything else required. This custom initialization occurs before the file is
+    read.
 
     :param str path: Path to the directory containing EEG data or an EEG data
         file (reader-specific).
@@ -32,10 +33,10 @@ class DataReader(object):
         if not osp.isdir(self.path):
             raise InvalidPathError("path must be a directory")
 
+        self.initialize(**kwargs)
+
         if not noread:
             self.read_timeseries(channels=channels)
-
-        self.initialize(**kwargs)
 
     def initialize(self, **kwargs):
         """Override this method for custom initialization to be performed after
