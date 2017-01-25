@@ -1,13 +1,16 @@
 """Read and process data from several sources."""
 
-import os
+# TODO: allow for relative vs. absolute times
+
+from __future__ import division
 import os.path as osp
+import json
 
 import numpy as np
 import h5py
 import pandas as pd
 
-from .exc import InvalidPathError
+from eeglib.exc import InvalidPathError
 
 
 class DataReader(object):
@@ -15,6 +18,10 @@ class DataReader(object):
     this method but instead implement the :meth:`initialize` method to do
     anything else required. This custom initialization occurs before the file is
     read.
+
+    Once timeseries data is read, it is placed in the :attr:`timeseries` data
+    frame. Any metadata that you wish to save should be placed in the
+    :attr:`metadata` dict which is by default empty.
 
     :param str path: Path to the directory containing EEG data or an EEG data
         file (reader-specific).
@@ -24,19 +31,22 @@ class DataReader(object):
     :param dict kwargs: Keyword arguments to pass along to :meth:`initialize`.
 
     """
-    timeseries = pd.DataFrame()
-    _time_column = "time"
+    def __init__(self, path=None, channels=None, noread=False, **kwargs):
+        self.timeseries = pd.DataFrame()
+        self.metadata = dict()
+        # self.jacksheet = dict()
+        self._time_column = "time"
 
-    def __init__(self, path, channels=None, noread=False, **kwargs):
-        self.path = osp.expanduser(path)
+        if path is not None:
+            path = osp.expanduser(path)
 
-        if not osp.isdir(self.path):
-            raise InvalidPathError("path must be a directory")
+            if not osp.isdir(path):
+                raise InvalidPathError("path must be a directory")
 
         self.initialize(**kwargs)
 
-        if not noread:
-            self.read_timeseries(channels=channels)
+        if not noread and path is not None:
+            self.read_timeseries(path, channels=channels)
 
     def initialize(self, **kwargs):
         """Override this method for custom initialization to be performed after
@@ -45,14 +55,15 @@ class DataReader(object):
         """
         pass
 
-    def read_timeseries(self, channels=None):
+    def read_timeseries(self, path, channels=None):
         """Override to read timeseries EEG data. In addition to returning the
         data as a pandas data frame, this should also set the :attr:`timeseries`
         attribute to the same data frame so that plotting and other
         data-dependent functions will work.
 
+        :param str path: Path to data.
         :param list channels: EEG channels to return or None to return all.
-        :returns: EEG timeseries
+        :returns: EEG timeseries.
         :rtype: pd.DataFrame
 
         """
@@ -66,6 +77,30 @@ class DataReader(object):
     @time_column.setter
     def time_column(self, new_label):
         self._time_column = new_label
+
+    @classmethod
+    def from_data(cls, times, data, **kwargs):
+        """Create a new :class:`DataReader` object given previously-read data.
+
+        :param list times: Times for the data
+        :param dict data: Dictionary of arrays of data (keys are channel
+            labels).
+        :param dict kwargs: Keyword arguments to be passed to
+            :meth:`initialize`.
+
+        """
+        assert isinstance(times, (list, tuple, np.ndarray))
+        assert isinstance(data, dict)
+
+        df = pd.DataFrame.from_items(
+            [("time", times)] +
+            [(label, ts) for label, ts in data.items()]
+        )
+
+        instance = cls(**kwargs)
+        instance.timeseries = df
+
+        return instance
 
     def get_time_range(self, channels=None, tmin=0, tspan=None):
         """Return a limited subset of timeseries data.
@@ -95,7 +130,7 @@ class DataReader(object):
 
         """
         df = self.get_time_range(channels, tmin, tspan)
-        ycols = [col for col in df.cols if col is not self.time_column]
+        ycols = [col for col in df.columns if col is not self.time_column]
         ax = df.plot(x=self.time_column, y=ycols)
         ax.set_xlabel("time")
         return ax
@@ -115,13 +150,14 @@ class RamulatorReader(DataReader):
     _event_log_file = "event_log.json"
     _log_file = "output.log"
 
-    def read_timeseries(self, channels=None):
+    def read_timeseries(self, path, channels=None):
         """Read Ramulator timeseries data files (stored in HDF5 format).
 
+        :param str path: Path to the directory containing the data.
         :param list channels: List of channels to read or None to read all.
 
         """
-        filename = osp.join(self.path, self._timeseries_file)
+        filename = osp.join(path, self._timeseries_file)
 
         # TODO: use pytables instead so that only it is required
         with h5py.File(filename, "r") as hfile:
@@ -142,3 +178,7 @@ class RamulatorReader(DataReader):
         self.timeseries = df
 
         return df
+
+
+if __name__ == "__main__":
+    pass
