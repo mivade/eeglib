@@ -33,6 +33,7 @@ class DataReader(object):
     """
     def __init__(self, path=None, channels=None, noread=False, **kwargs):
         self.timeseries = pd.DataFrame()
+        self.events = dict()
         self.metadata = dict()
         # self.jacksheet = dict()
         self._time_column = "time"
@@ -135,8 +136,13 @@ class DataReader(object):
         ax.set_xlabel("time")
         return ax
 
-    def parse_events(self):
-        """Override to be able to parse events files."""
+    def parse_events(self, path):
+        """Override to be able to parse events files.
+
+        In addition to returning the events as a dict, this should also set the
+        :attr:`events` dict so as to be accessible later.
+
+        """
         raise NotImplementedError
 
 
@@ -178,6 +184,19 @@ class RamulatorReader(DataReader):
         self.timeseries = df
 
         return df
+
+    def parse_events(self, path):
+        """Parse JSON events file.
+
+        :param str path: Path to directory containing data.
+
+        """
+        filename = osp.join(path, self._event_log_file)
+        with open(filename, "r") as events_file:
+            events = json.load(events_file)
+
+        self.events = events
+        return self.events
 
 
 if __name__ == "__main__":
