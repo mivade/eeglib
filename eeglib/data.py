@@ -121,18 +121,20 @@ class DataReader(object):
         else:
             return df[(df[self.time_column] >= tmin) & (df[self.time_column] <= (tmin + tspan))]
 
-    def plot_timeseries(self, channels=None, tmin=0, tspan=None):
+    def plot_timeseries(self, channels=None, tmin=0, tspan=None, **kwargs):
         """Plot an EEG timeseries.
 
         :param list channels: If not None, the channels to plot.
         :param float tmin: Start time to limit the plot to.
         :param float tspan: If not None, the total amount of time to plot.
+        :param dict kwargs: Keyword arguments to pass to the data frame's
+            :meth:`plot` method.
         :returns: axes object
 
         """
         df = self.get_time_range(channels, tmin, tspan)
         ycols = [col for col in df.columns if col is not self.time_column]
-        ax = df.plot(x=self.time_column, y=ycols)
+        ax = df.plot(x=self.time_column, y=ycols, **kwargs)
         ax.set_xlabel("time")
         return ax
 
