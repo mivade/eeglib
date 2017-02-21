@@ -14,5 +14,10 @@ setup(
         "numpy",
         "pandas",
         "tables"
-    ]
+    ],
+    extras_require={
+        "full": [
+            "tqdm"
+        ]
+    }
 )
